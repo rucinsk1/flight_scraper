@@ -21,13 +21,14 @@ if __name__ == '__main__':
     end = '2023-11-27'
     url = str('https://www.kayak.pl/flights/{}-{}/{}/{}?sort=price_a'.format(home, dest, start, end))
 
+    #sleep(10)
     driver.get(url)
-    # popup_window = '//*[@id="portal-container"]/div/div[2]/div/div/div[1]/div/span/button'
-    # driver.find_element(by=By.XPATH, value = popup_window).click()
+    sleep(5)
+    popup_window =  '//div[@class = "Py0r-button-content"]'#'//*[@id="portal-container"]/div/div[2]/div/div/div[1]/div/span/button'
+    driver.find_element(by=By.XPATH, value = popup_window).click()
     
-    flight_rows = driver.find_elements(by=By.XPATH, value="//div[@class='nrc6-inner']")
-    print(flight_rows)
-    
+    flight_rows = driver.find_elements(by=By.XPATH, value='//div[@class="nrc6-inner"]') #/"
+
     prices = []
     airlines = []
     first_flight_stops = []
@@ -36,7 +37,9 @@ if __name__ == '__main__':
     checked_luggage = []
     first_way_hours = []
     return_way_hours = []
-    full_time = []
+    first_flight_airports = []
+    return_flight_airports = []
+    
     for element in flight_rows:
         elementHTML =  element.get_attribute('outerHTML')
         elementSoup = BeautifulSoup(elementHTML, 'html.parser')
@@ -45,11 +48,10 @@ if __name__ == '__main__':
         temp_price = elementSoup.find("div", {"class" : "nrc6-price-section"})
         price = temp_price.find("div", {"class" : "f8F1-price-text"})
         prices.append(price.text)
-
+        
         #airline
         airline = elementSoup.find("div", {"class" : "J0g6-operator-text"})
         airlines.append(airline.text)
-        print(type(elementSoup))
         
         #stops
         ways = elementSoup.find_all("li", {"class" : "hJSA-item"})
@@ -91,28 +93,45 @@ if __name__ == '__main__':
             return_way_hours.append("error")
             print(type(schedule[0]))
         
+        #Airports
+        airports = elementSoup.find_all("span", {"class" : "EFvI-ap-info"})
+        ports = []
+        
+        for airport in airports:
+            elems = airport.find_all("span")
+            text = ''
+            for elem in elems:
+                text += elem.text + ' '
+            ports.append(text[:-1])
+        first_airports = ports[0] + ' -> ' + ports[1]
+        return_airports = ports[2] + ' -> ' + ports[3]
+        first_flight_airports.append(first_airports)
+        return_flight_airports.append(return_airports)
         
         #travel_time
         
         
-    print(prices)
-    print(airlines)
-    print(first_flight_stops)
-    print(return_flight_stops)
-    print(hand_luggage)
-    print(checked_luggage)
-    print(first_way_hours)
-    print(return_way_hours)
+    # print(prices)
+    # print(airlines)
+    # print(first_flight_stops)
+    # print(return_flight_stops)
+    # print(hand_luggage)
+    # print(checked_luggage)
+    # print(first_way_hours)
+    # print(return_way_hours)
     
     data = {
         "price" : prices,
         "airline" : airlines,
         "first_way_hours" : first_way_hours,
+        "first_way_airports" : first_flight_airports,
         "first_way_stops" : first_flight_stops,
         "return_way_hours" : return_way_hours,
+        "return_way_airports" : return_flight_airports,
         "return_stops" : return_flight_stops,
         "hand_luggage" : hand_luggage,
         "checked_luggage" : checked_luggage
+        
     }
     
     df = pd.DataFrame(data)
